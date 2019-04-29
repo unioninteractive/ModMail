@@ -1,0 +1,14 @@
+{
+  "Prefix": "!",
+  "MaintainerRoleId": 568099433238233108,
+  "AdminRoleId": 567375592916516866,
+  "ModeratorRoleId": 567378773276622858,
+  "StaffRoleId": 571028186440138818,
+  "MainGuildId": 519190073707724810,
+  "ModMailCategoryId": 569940690172379137,
+  "LogWebhookId": "567679575161569284",
+  "LogWebhookToken": "_tUte8Z3CWFD-irnSBr27hwIqScGEzSLMmlJClqWrncK41jynmzWT5IiL17RRTSrNnbw",
+  "LogWebhookUsername": "DiscordLogger (ModMail)",
+  "LogWebhookAvatarUrl": null,
+  "IgnoredCommandChannels": [567679461017780224]
+}
