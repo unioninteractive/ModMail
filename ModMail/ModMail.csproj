@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\ModMail.Models\ModMail.Models.csproj" />
       <ProjectReference Include="..\ModMail.Serilog.Sinks\ModMail.Serilog.Sinks.csproj" />
     </ItemGroup>
 

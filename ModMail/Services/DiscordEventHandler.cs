@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Serilog.Core;
 
@@ -44,9 +45,15 @@ namespace ModMail.Services
             }
         }
 
+        private async Task OnReady(ReadyEventArgs e)
+        {
+            await _client.UpdateStatusAsync(new DiscordActivity("DM me to contact staff!", ActivityType.Playing));
+        }
+        
         public void HookEvents()
         {
             _client.DebugLogger.LogMessageReceived += Log;
+            _client.Ready += OnReady;
         }
     }
 }

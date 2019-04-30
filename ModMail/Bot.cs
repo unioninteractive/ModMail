@@ -41,7 +41,7 @@ namespace ModMail
             
             _client = new DiscordClient(new DiscordConfiguration
             {
-                Token = Environment.GetEnvironmentVariable("MODMAILTOKEN"),
+                Token = Utils.CXGetEnvironmentVariable("MODMAILTOKEN"),
                 TokenType = TokenType.Bot,
                 LogLevel = LogLevel.Info,
                 UseInternalLogHandler = false,
@@ -117,11 +117,6 @@ namespace ModMail
             await _services.GetRequiredService<ReactionRoleHandler>().InitializeAsync();
             // Start the mail service.
             _services.GetRequiredService<MailService>();
-
-
-            // Initialize the command service and handler last.
-            // TODO: D#+ Command Service
-            //_services.GetRequiredService<CommandHandler>();
         }
     }
 }
