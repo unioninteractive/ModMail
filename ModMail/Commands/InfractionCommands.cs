@@ -1,71 +1,47 @@
-using System;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using ModMail.Models;
 using ModMail.Preconditions;
+using ModMail.Services;
 
 namespace ModMail.Commands
 {
+    [Group("infractions")]
     [RequireStaff]
     public class InfractionCommands : BaseCommandModule
     {
-        [Command("infractions")]
-        public async Task GetInfractionsForUser(CommandContext ctx, DiscordUser user)
+        private readonly InfractionManager _infractions;
+
+        public InfractionCommands(InfractionManager infractions)
         {
-            ModMailContext dbContext = null;
-            
-            try
-            {
-                dbContext = new ModMailContext();
-                var builder = new StringBuilder();
-                var infractions = dbContext.ModerationInfractions.Where(i => i.UserId == user.Id);
-
-                if (!infractions.Any())
-                {
-                    await ctx.RespondAsync("User has no infractions.");
-                    return;
-                }
-                
-                foreach (var infraction in infractions)
-                {
-                    builder.Append($"{infraction.Type} | {infraction.Timestamp.ToString()}");
-                    builder.AppendLine();
-                }
-
-                await ctx.RespondAsync(builder.ToString());
-            }
-            catch (Exception e)
-            {
-                await ctx.RespondAsync("Exception: " + e.Message);
-            }
-            finally
-            {
-                dbContext?.Dispose();
-            }
+            _infractions = infractions;
         }
 
-        [Command("note")]
-        public async Task AddNoteToUser(CommandContext ctx, DiscordUser user, [RemainingText] string note = "")
+        [GroupCommand]
+        public async Task GetUserInfractions(CommandContext ctx, DiscordUser user = null)
         {
-            if (string.IsNullOrEmpty(note))
+            user = user ?? ctx.User;
+
+            var query = _infractions.GetUserInfractions(user);
+
+            if (!query.Successful)
             {
-                await ctx.RespondAsync("The notice cannot be empty.");
+                await ctx.RespondAsync(embed: Embeds.Message($"Failed to get user infractions: {query.Message}"));
                 return;
             }
-            
-            var infraction = new Infraction(InfractionType.Notice, DateTimeOffset.Now, ctx.User.Id, user.Id, note);
 
-            using (var dbContext = new ModMailContext())
+            if (!query.Result.Any())
             {
-                dbContext.ModerationInfractions.Add(infraction);
-                await dbContext.SaveChangesAsync();
-
-                await ctx.RespondAsync("Added a note to user.");
+                await ctx.RespondAsync(
+                    embed: Embeds.Message($"{user.Username}#{user.Discriminator} has no infractions."));
             }
+            else
+            {
+                await ctx.RespondAsync(embed: Embeds.UserInfractions(ctx, user, query.Result));
+            }
+            
         }
     }
 }

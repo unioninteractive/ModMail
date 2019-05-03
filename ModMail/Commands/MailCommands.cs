@@ -23,7 +23,7 @@ namespace ModMail.Commands
         {
             if (_mail.HasSession(member.Id))
             {
-                await ctx.RespondAsync("The specified user already has a mail session opened.");
+                await ctx.RespondAsync(embed: Embeds.Message("The specified user already has a mail session opened.", DiscordColor.Red));
                 return;
             }
 
@@ -35,7 +35,7 @@ namespace ModMail.Commands
         {
             if (!_mail.IsChannelLinkedToSession(ctx.Channel.Id))
             {
-                await ctx.RespondAsync("This channel isn't linked to any mail session.");
+                await ctx.RespondAsync(embed: Embeds.Message("This channel isn't linked to any mail session.", DiscordColor.Red));
                 return;
             }
 
