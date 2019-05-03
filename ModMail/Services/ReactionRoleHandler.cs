@@ -1,22 +1,21 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
-using ModMail.Services.Models;
-using Newtonsoft.Json;
+using ModMail.Models;
 using Serilog.Core;
 
 namespace ModMail.Services
 {
+    // TODO: Refactor results to use QueryResult.
     public class ReactionRoleHandler
     {
         private readonly ConfigurationService _config;
         private readonly Logger _log;
 
-        private List<ReactionRolePair> _reactionRoles;
+        private List<ReactionRole> _reactionRoles;
         
         public ReactionRoleHandler(DiscordClient client, Logger log, ConfigurationService config)
         {
@@ -26,26 +25,25 @@ namespace ModMail.Services
             client.MessageReactionAdded += OnReactionAdded;
         }
 
-        public async Task InitializeAsync()
+        public void Initialize()
         {
-            if (_config.GetConfig() == null) throw new ArgumentNullException(nameof(_config));
-            
-            var reactionPath = Path.Combine(_config.ConfigDirPath, "reactions.json");
-            
-            if (!File.Exists(reactionPath))
+            ModMailContext dbContext = null;
+
+            try
             {
-                _reactionRoles = new List<ReactionRolePair>();
-                var json = JsonConvert.SerializeObject(_reactionRoles, Formatting.Indented);
-                await File.WriteAllTextAsync(reactionPath, json);
-                
-                _log.Information($"RctRole: Created new reaction roles file at {reactionPath}.");
+                // Create the database context and grab the reaction roles.
+                dbContext = new ModMailContext();
+                _reactionRoles = dbContext.ReactionRoles.ToList();
+
+                _log.Information("RctRole: Successfully fetched reaction role pairs from the database.");
             }
-            else
+            catch (Exception e)
             {
-                var json = await File.ReadAllTextAsync(reactionPath);
-                _reactionRoles = JsonConvert.DeserializeObject<List<ReactionRolePair>>(json);
-                
-                _log.Information($"RctRole: Loaded {_reactionRoles.Count} ReactionRolePairs.");
+                _log.Fatal(e, "RctRole: An error has occured while fetching reaction role data. This service will not work!");
+            }
+            finally
+            {
+                dbContext?.Dispose();
             }
         }
 
@@ -90,52 +88,114 @@ namespace ModMail.Services
             }
         }
 
-        public (bool, string) AddReactionRolePair(ReactionRolePair pair)
+        public async Task<(bool, string)> AddReactionRolePairAsync(ReactionRole pair)
         {
-            if (_reactionRoles.Any(r => r.Equals(pair)))
-            {
-                return (false, $"Cannot add {pair} as it already exists.");
-            }
-            
-            _reactionRoles.Add(pair);
-            _log.Information($"RctRole: Added new pair ({pair})");
+            ModMailContext dbContext = null;
 
-            return (true, $"Successfully added new pair ({pair})");
-        }
-
-        public (bool, string) RemoveReactionRolePair(ReactionRolePair pair)
-        {
-            if (_reactionRoles.All(r => r.Equals(pair) == false))
-            {
-                return (false, $"Cannot find any pair {pair} to remove.");
-            }
-
-            var index = _reactionRoles.FindIndex(r => r.Equals(pair));
-            _reactionRoles.RemoveAt(index);
-            
-            _log.Information($"RctRole: Removed existing pair ({pair})");
-            return (true, $"Successfully removed existing pair ({pair})");
-        }
-
-        /// <summary>
-        /// Save the reaction role pairs.
-        /// </summary>
-        /// <returns> bSuccess, CompletionMessage, ErrorException </returns>
-        public async Task<(bool, string, Exception)> SaveReactionPairsAsync()
-        {
             try
             {
-                var reactionPath = Path.Combine(_config.ConfigDirPath, "reactions.json");
-                var json = JsonConvert.SerializeObject(_reactionRoles, Formatting.Indented);
-                await File.WriteAllTextAsync(reactionPath, json);
+                // Get the context.
+                dbContext = new ModMailContext();
 
-                return (true, $"Successfully saved reaction role pairs.", null);
+                // Fail if a reaction role pair with the same role id exists.
+                if (dbContext.ReactionRoles.Any(r => r.RoleId == pair.RoleId))
+                {
+                    return (false, $"Cannot add {pair} as a pair with the same role ID already exists.");
+                }
+
+                // Add it and save the changes to the database.
+                dbContext.ReactionRoles.Add(pair);
+                await dbContext.SaveChangesAsync();
+
+                // Update the reaction roles we have.
+                _reactionRoles = dbContext.ReactionRoles.ToList();
+
+                return (true, $"Successfully added new pair ({pair})");
             }
             catch (Exception e)
             {
-                _log.Error("RctRole: Failed to save reaction role pair.", e);
-                return (false, $"Failed to save reaction role pairs", e);
+                _log.Error(e, "RctRole: Failed to add a new reaction role pair to the database.");
+                return (false, $"Failed to add a new reaction role pair to the database.");
             }
+            finally
+            {
+                dbContext?.Dispose();
+            }
+        }
+
+        
+        public async Task<(bool, string)> RemoveReactionRolePairAsync(ReactionRole pair)
+        {
+            ModMailContext dbContext = null;
+
+            try
+            {
+                // Get the context.
+                dbContext = new ModMailContext();
+
+                // Fail if a reaction role pair with the same role id doesn't exist.
+                if (!dbContext.ReactionRoles.Any(r => r.Equals(pair)))
+                {
+                    return (false, $"Cannot remove {pair} as a pair with the same role ID doesn't exist.");
+                }
+
+                // Remove it from the database.
+                dbContext.ReactionRoles.Remove(pair);
+                
+                // Save changes.
+                await dbContext.SaveChangesAsync();
+
+                return (true, $"Successfully removed pair ({pair})");
+            }
+            catch (Exception e)
+            {
+                _log.Error(e, "RctRole: Failed to remove existing reaction role pair from the database.");
+                return (false, $"Failed to remove existing reaction role pair from the database.");
+            }
+            finally
+            {
+                dbContext?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Reload the reaction roles from the database.
+        /// Useful if the reaction roles pairs have been edited manually outside of the bot.
+        /// </summary>
+        public (bool, string) ReloadReactionRoles()
+        {
+            ModMailContext dbContext = null;
+
+            try
+            {
+                dbContext = new ModMailContext();
+
+                // Update the reaction role list.
+                _reactionRoles = dbContext.ReactionRoles.ToList();
+
+                _log.Information("RctRole: Updated reaction roles.");
+                return (true, "Successfully reloaded reaction roles.");
+            }
+            catch (Exception e)
+            {
+                _log.Error(e, "RctRole: Failed to update reaction roles.");
+                return (false, "Failed to realod reaction roles.");
+            }
+            finally
+            {
+                dbContext?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Get the local reaction roles.
+        /// </summary>
+        /// <returns> The local reaction roles. </returns>
+        public List<ReactionRole> GetReactionRoles()
+        {
+            var roles = new ReactionRole[_reactionRoles.Count];
+            _reactionRoles.CopyTo(roles);
+            return roles.ToList();
         }
     }
 }
