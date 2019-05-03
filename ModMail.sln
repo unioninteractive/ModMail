@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModMail.Serilog.Sinks", "Mo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModMail.Models", "ModMail.Models\ModMail.Models.csproj", "{D0F44B3E-AAC6-42E4-9396-FCF712364229}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModMail.Utilities", "ModMail.Utilities\ModMail.Utilities.csproj", "{6A5513C9-552A-45A8-8FA5-F7D708029E86}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{D0F44B3E-AAC6-42E4-9396-FCF712364229}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0F44B3E-AAC6-42E4-9396-FCF712364229}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0F44B3E-AAC6-42E4-9396-FCF712364229}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A5513C9-552A-45A8-8FA5-F7D708029E86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A5513C9-552A-45A8-8FA5-F7D708029E86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A5513C9-552A-45A8-8FA5-F7D708029E86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A5513C9-552A-45A8-8FA5-F7D708029E86}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

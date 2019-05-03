@@ -8,9 +8,11 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.DependencyInjection;
 using ModMail.Commands;
+using ModMail.Models;
 using ModMail.Serilog.Sinks;
 using ModMail.Services;
 using ModMail.Services.Models;
+using ModMail.Utilities;
 using Serilog;
 using Serilog.Core;
 using TokenType = DSharpPlus.TokenType;
@@ -55,7 +57,7 @@ namespace ModMail
             _services.GetRequiredService<Logger>().Information("ModMail: Startup sequence initiated.");    
             
             // Initialize the services if needed.
-            await InitializeServicesAsync();
+            InitializeServices();
             
             // Start the command service.
             _commands = StartCommandService();
@@ -103,18 +105,19 @@ namespace ModMail
                 .AddSingleton<ReactionRoleHandler>()
                 .AddSingleton<EvaluationService>()
                 .AddSingleton<MailService>()
+                .AddSingleton<InfractionManager>()
                 .AddSingleton<HttpClient>()
                 .BuildServiceProvider();
 
             return provider;
         }
 
-        private async Task InitializeServicesAsync()
+        private void InitializeServices()
         {
             // Hook discord events.
             _services.GetRequiredService<DiscordEventHandler>().HookEvents();
             // Start the reaction handler.
-            await _services.GetRequiredService<ReactionRoleHandler>().InitializeAsync();
+            _services.GetRequiredService<ReactionRoleHandler>().Initialize();
             // Start the mail service.
             _services.GetRequiredService<MailService>();
         }
