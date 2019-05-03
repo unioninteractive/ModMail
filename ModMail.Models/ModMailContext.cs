@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using ModMail.Utilities;
 using Npgsql;
 
 namespace ModMail.Models
@@ -9,8 +10,10 @@ namespace ModMail.Models
     {
         static ModMailContext() => MapGlobalEnums();
         
-        public DbSet<Infraction> ModerationInfractions { get; set; }
-
+        public DbSet<Infraction> Infractions { get; set; }
+        
+        public DbSet<ReactionRole> ReactionRoles { get; set; }
+        
         protected override void OnConfiguring(DbContextOptionsBuilder builder)
         {
             if (!builder.IsConfigured)
