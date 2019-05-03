@@ -1,6 +1,6 @@
 using System;
 
-namespace ModMail.Models
+namespace ModMail.Utilities
 {
     public static class Utils
     {
