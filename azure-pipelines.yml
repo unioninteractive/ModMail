@@ -18,11 +18,9 @@ variables:
 
 steps:
 - task: NuGetToolInstaller@0
-
-- task: UseDotNet@2
   inputs:
-    packageType: 'sdk'
-    version: '2.2'
+    versionSpec: '4.4.3'
+
 
 - task: NuGetCommand@2
   inputs:
