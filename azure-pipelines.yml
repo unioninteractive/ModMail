@@ -14,6 +14,11 @@ variables:
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '2.2.0'
+
 steps:
 - task: NuGetToolInstaller@0
 
