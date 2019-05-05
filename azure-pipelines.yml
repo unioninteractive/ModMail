@@ -19,7 +19,11 @@ steps:
 
 - task: NuGetCommand@2
   inputs:
+    command: 'restore'
     restoreSolution: '$(solution)'
+    feedsToUse: 'config'
+    nugetConfigPath: 'NuGet.config'
+    versioningScheme: 'off'
 
 - task: VSBuild@1
   inputs:
