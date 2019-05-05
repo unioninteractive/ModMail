@@ -22,7 +22,7 @@ steps:
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: 'netcoreapp2.2'
+    version: '2.2'
 
 - task: NuGetCommand@2
   inputs:
